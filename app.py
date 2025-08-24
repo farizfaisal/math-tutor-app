@@ -1,24 +1,35 @@
 import streamlit as st
 from openai import OpenAI
 
-# Initialize OpenAI
-client = OpenAI(api_key="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")
-
+# App title
 st.title("🧮 Fariz's AI Math Tutor")
 
-question = st.text_input("Enter your math problem:")
+# Store API key securely in session state
+if "api_key" not in st.session_state:
+    st.session_state.api_key = ""
 
-if st.button("Solve"):
-    if question.strip() == "":
-        st.warning("Please enter a math problem!")
-    else:
+st.session_state.api_key = st.text_input(
+    "Enter your OpenAI API Key:",
+    type="password"
+)
+
+# Only initialize client if key is provided
+if st.session_state.api_key:
+    client = OpenAI(api_key=st.session_state.api_key)
+
+    # Math input
+    problem = st.text_input("Enter your math problem:")
+
+    if st.button("Solve") and problem:
         with st.spinner("Thinking..."):
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "You are a helpful math tutor."},
-                    {"role": "user", "content": question},
+                    {"role": "system", "content": "You are a helpful math tutor. Explain step by step."},
+                    {"role": "user", "content": problem}
                 ]
             )
-            answer = response.choices[0].message.content
-            st.success(answer)
+        st.success(response.choices[0].message.content)
+
+else:
+    st.info("🔑 Please enter your OpenAI API key to continue.")
